@@ -2,37 +2,38 @@
 
 from __future__ import annotations
 
-from PyQt6.QtCore import Qt, QSettings
+from PyQt6.QtCore import QSettings, Qt
 from PyQt6.QtGui import QAction, QKeySequence
 from PyQt6.QtWidgets import (
     QMainWindow,
     QMenu,
-    QSplitter,
     QMessageBox,
-    QWidget,
-    QVBoxLayout,
+    QSplitter,
     QTabWidget,
+    QVBoxLayout,
+    QWidget,
 )
 
-from core.library import Library
-from core.config import Config
-from core.storage import Storage
 from claude.claude_agent import ClaudeAgentManager
 from claude.claude_client import TitleGenerator
 from claude.context_builder import BookContext
-from .library_panel import LibraryPanel
-from .reading_view import ReadingView
-from .notes_panel import NotesPanel
-from .status_bar import ReaderStatusBar
+from core.config import Config
+from core.library import Library
+from core.storage import Storage
+
 from .claude_panel import ClaudePanel
+from .library_panel import LibraryPanel
+from .notes_panel import NotesPanel
+from .reading_view import ReadingView
+from .status_bar import ReaderStatusBar
 from .widgets.bookmark_widget import BookmarkWidget
-from .widgets.screenshot_tool import ScreenshotTool
 from .widgets.page_canvas import (
-    MODE_SINGLE_CONTINUOUS,
     MODE_DOUBLE_CONTINUOUS,
-    MODE_SINGLE_FLIP,
     MODE_DOUBLE_FLIP,
+    MODE_SINGLE_CONTINUOUS,
+    MODE_SINGLE_FLIP,
 )
+from .widgets.screenshot_tool import ScreenshotTool
 
 
 class MainWindow(QMainWindow):

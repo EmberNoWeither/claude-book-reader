@@ -2,31 +2,25 @@
 
 from __future__ import annotations
 
-import os
-from pathlib import Path
-
-from PyQt6.QtCore import Qt, pyqtSignal, QSize
-from PyQt6.QtGui import QIcon, QFont, QAction
+from PyQt6.QtCore import QSize, Qt, pyqtSignal
 from PyQt6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
+    QApplication,
+    QFileDialog,
     QHBoxLayout,
+    QLabel,
     QLineEdit,
-    QTreeWidget,
-    QTreeWidgetItem,
     QListWidget,
     QListWidgetItem,
-    QPushButton,
-    QLabel,
-    QFileDialog,
     QMenu,
-    QStyledItemDelegate,
-    QStyle,
-    QApplication,
+    QPushButton,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
 )
 
+from core.book import Book, Category
 from core.library import Library
-from core.book import Book, Category, Tag
 
 
 class LibraryPanel(QWidget):

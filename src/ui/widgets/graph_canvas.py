@@ -2,26 +2,23 @@
 
 from __future__ import annotations
 
-import math
-
-from PyQt6.QtCore import Qt, pyqtSignal, QRectF, QPointF
-from PyQt6.QtGui import QPen, QBrush, QColor, QFont, QPainter
+from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QBrush, QColor, QFont, QPainter, QPen
 from PyQt6.QtWidgets import (
-    QGraphicsView,
-    QGraphicsScene,
-    QGraphicsEllipseItem,
-    QGraphicsTextItem,
-    QGraphicsLineItem,
     QDialog,
-    QVBoxLayout,
+    QGraphicsEllipseItem,
+    QGraphicsLineItem,
+    QGraphicsScene,
+    QGraphicsTextItem,
+    QGraphicsView,
     QHBoxLayout,
-    QPushButton,
     QLabel,
+    QPushButton,
+    QVBoxLayout,
 )
 
 from core.storage import Storage
 from knowledge.graph_engine import GraphEngine
-
 
 RELATION_COLORS = {
     "IS_A": "#89b4fa",

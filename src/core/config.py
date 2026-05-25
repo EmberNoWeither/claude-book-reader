@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import Any
 
@@ -87,7 +86,7 @@ class Config:
         self._config_path = Path(path)
 
         if self._config_path.exists():
-            with open(self._config_path, "r", encoding="utf-8") as f:
+            with open(self._config_path, encoding="utf-8") as f:
                 loaded = yaml.safe_load(f) or {}
             self._data = self._deep_merge(DEFAULT_CONFIG, loaded)
         else:

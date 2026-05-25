@@ -14,9 +14,7 @@ except ImportError:
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
     QHBoxLayout,
-    QLabel,
     QPushButton,
-    QSizePolicy,
     QTextBrowser,
     QTextEdit,
     QVBoxLayout,
@@ -181,7 +179,7 @@ class TerminalWidget(QWidget):
                 rendered = _md_to_html(text)
                 parts.append(f'<div class="msg-assistant"><div class="role">Claude · {ts}</div>{rendered}</div>')
             elif role == "thinking":
-                parts.append(f'<div class="msg-thinking">Claude 正在思考…</div>')
+                parts.append('<div class="msg-thinking">Claude 正在思考…</div>')
             elif role == "error":
                 escaped = html.escape(text)
                 parts.append(f'<div class="msg-error"><div class="role">错误</div>{escaped}</div>')

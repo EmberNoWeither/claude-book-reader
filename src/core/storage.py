@@ -29,7 +29,7 @@ class Storage:
         if filename not in self._cache:
             path = self.data_dir / filename
             if path.exists():
-                with open(path, "r", encoding="utf-8") as f:
+                with open(path, encoding="utf-8") as f:
                     self._cache[filename] = json.load(f)
             else:
                 self._cache[filename] = self._default_for(filename)
@@ -53,7 +53,7 @@ class Storage:
     def read_yaml(self, filename: str) -> dict:
         path = self.data_dir / filename
         if path.exists():
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 return yaml.safe_load(f) or {}
         return {}
 
@@ -76,7 +76,7 @@ class Storage:
     def read_book_json(self, book_id: str, filename: str) -> Any:
         path = self.book_dir(book_id) / filename
         if path.exists():
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 return json.load(f)
         return self._default_for(filename)
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from .claude_client import ClaudeClient
-from .context_builder import BookContext, ClaudeContext, ContextBuilder, InteractionContext
+from .context_builder import BookContext, ClaudeContext, ContextBuilder
 
 
 class ClaudeAgent(QObject):

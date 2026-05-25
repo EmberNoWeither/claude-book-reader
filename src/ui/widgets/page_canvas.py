@@ -3,26 +3,23 @@ and working text selection."""
 
 from __future__ import annotations
 
-from PyQt6.QtCore import Qt, pyqtSignal, QRectF
+from PyQt6.QtCore import QRectF, Qt, pyqtSignal
 from PyQt6.QtGui import (
-    QPainter,
-    QColor,
-    QPen,
     QBrush,
-    QFont,
+    QColor,
+    QPainter,
+    QPen,
 )
 from PyQt6.QtWidgets import (
-    QGraphicsView,
-    QGraphicsScene,
+    QFrame,
     QGraphicsPixmapItem,
     QGraphicsRectItem,
-    QFrame,
-    QApplication,
-    QMenu,
+    QGraphicsScene,
+    QGraphicsView,
 )
 
-from reader.pdf_engine import PdfEngine
 from reader.page_renderer import PageRenderer
+from reader.pdf_engine import PdfEngine
 
 MODE_SINGLE_CONTINUOUS = "single_continuous"
 MODE_DOUBLE_CONTINUOUS = "double_continuous"
@@ -346,7 +343,6 @@ class PageCanvas(QGraphicsView):
             self.fitInView(item, Qt.AspectRatioMode.KeepAspectRatio)
 
     def _layout_double_flip(self) -> None:
-        spacing = 8
         self._page_y = []
         self._page_h = []
         self._page_w = []
@@ -422,7 +418,16 @@ class PageCanvas(QGraphicsView):
         if page_num in self._page_items:
             return
         rzoom = self._render_zoom()
-        pixmap = self._renderer.render(page_num, rzoom)
+        try:
+            pixmap = self._renderer.render(page_num, rzoom)
+        except Exception:
+            from utils.logger import get_logger
+            get_logger(__name__).exception("Render failed for page %d", page_num)
+            # 占位：用空 pixmap 防止后续 KeyError
+            from PyQt6.QtGui import QPixmap
+            pixmap = QPixmap(int(self._page_w[page_num] * self._dpr) if page_num < len(self._page_w) else 600,
+                             int(self._page_h[page_num] * self._dpr) if page_num < len(self._page_h) else 800)
+            pixmap.fill(QColor("#3b1f1f"))
         item = QGraphicsPixmapItem(pixmap)
         item.setScale(1.0 / self._dpr)
         item.setData(Qt.ItemDataRole.UserRole, page_num)

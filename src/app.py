@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
 # QtWebEngineWidgets must be imported before QApplication is created
 try:
@@ -11,13 +10,12 @@ try:
 except ImportError:
     pass
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPalette, QColor
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from core.config import Config
 from core.library import Library
 from ui.main_window import MainWindow
+from utils.logger import get_logger, init_logging
 
 DARK_STYLESHEET = """
 QMainWindow {
@@ -167,6 +165,12 @@ class App:
         # 数据目录
         self._config.data_dir.mkdir(parents=True, exist_ok=True)
 
+        # 日志（依赖 data_dir 已就绪）
+        init_logging()
+        self._log = get_logger(__name__)
+        self._install_excepthook()
+        self._log.info("Application starting")
+
         # 图书库
         self._library = Library()
 
@@ -176,6 +180,26 @@ class App:
         # 主窗口
         self._main_window = MainWindow(self._library, self._config, self._library.storage)
         self._main_window.show()
+
+    def _install_excepthook(self) -> None:
+        """全局异常钩子：未捕获异常写日志 + 弹窗提示，避免静默崩溃"""
+        def hook(exc_type, exc_value, exc_tb):
+            if issubclass(exc_type, KeyboardInterrupt):
+                sys.__excepthook__(exc_type, exc_value, exc_tb)
+                return
+            self._log.exception(
+                "Unhandled exception", exc_info=(exc_type, exc_value, exc_tb)
+            )
+            try:
+                QMessageBox.critical(
+                    None,
+                    "意外错误",
+                    f"{exc_type.__name__}: {exc_value}\n\n详情已写入日志文件。",
+                )
+            except Exception:
+                pass
+
+        sys.excepthook = hook
 
     def _apply_theme(self) -> None:
         theme = self._config.get("app", "theme", default="dark")

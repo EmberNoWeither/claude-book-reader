@@ -1,6 +1,6 @@
 """设置对话框 — 占位，Phase 5 完善"""
 
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel
+from PyQt6.QtWidgets import QDialog, QLabel, QVBoxLayout
 
 
 class SettingsDialog(QDialog):

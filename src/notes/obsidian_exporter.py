@@ -8,12 +8,15 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
 
-from core.storage import Storage
+from core.book import Book
 from core.config import Config
 from core.library import Library
-from core.book import Book
-from notes.note_manager import NoteManager
+from core.storage import Storage
 from knowledge.graph_engine import GraphEngine
+from notes.note_manager import NoteManager
+from utils.logger import get_logger
+
+_log = get_logger(__name__)
 
 
 @dataclass
@@ -103,6 +106,7 @@ class ObsidianExporter:
             target = book_dir / f"{self._safe_filename(book.title)}.md"
             self._write_file(target, content, result)
         except Exception as e:
+            _log.exception("Export book failed: %s", book.title)
             result.errors.append(f"Export book {book.title}: {e}")
 
         return result
@@ -134,6 +138,7 @@ class ObsidianExporter:
                 target_path = vault / "Concepts" / f"{self._safe_filename(concept.name)}.md"
                 self._write_file(target_path, content, result)
             except Exception as e:
+                _log.exception("Export concept failed: %s", concept.name)
                 result.errors.append(f"Export concept {concept.name}: {e}")
 
     def _export_moc(self, result: ExportResult) -> None:
@@ -152,6 +157,7 @@ class ObsidianExporter:
             target_path = vault / "_MOCs" / "知识地图.md"
             self._write_file(target_path, content, result)
         except Exception as e:
+            _log.exception("Export MOC failed")
             result.errors.append(f"Export MOC: {e}")
 
     def _write_file(self, path: Path, content: str, result: ExportResult) -> None:

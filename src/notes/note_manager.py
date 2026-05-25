@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from core.storage import Storage
+
 from .models import Note
 
 

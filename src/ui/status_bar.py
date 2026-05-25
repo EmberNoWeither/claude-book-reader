@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PyQt6.QtWidgets import QStatusBar, QLabel
+from PyQt6.QtWidgets import QLabel, QStatusBar
 
 
 class ReaderStatusBar(QStatusBar):

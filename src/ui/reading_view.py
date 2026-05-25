@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
-from PyQt6.QtCore import Qt, pyqtSignal, QPoint
+from PyQt6.QtCore import QPoint, Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QCursor
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel,
+    QLabel,
     QMenu,
+    QVBoxLayout,
+    QWidget,
 )
 
 from core.book import Bookmark
 from core.library import Library
+
 from .reading_toolbar import ReadingToolbar
 from .widgets.page_canvas import PageCanvas
 
@@ -157,7 +160,7 @@ class ReadingView(QWidget):
         # Show menu at current cursor position (where mouse was released)
         self._show_selection_menu(QCursor.pos())
 
-    def _show_selection_menu(self, pos: "QPoint") -> None:
+    def _show_selection_menu(self, pos: QPoint) -> None:
         """在指定位置弹出选中文字操作菜单"""
         if not self._selected_text:
             return

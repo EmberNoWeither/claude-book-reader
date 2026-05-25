@@ -1,14 +1,14 @@
 """新建分类对话框"""
 
 from PyQt6.QtWidgets import (
+    QComboBox,
     QDialog,
-    QVBoxLayout,
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QTextEdit,
     QPushButton,
-    QComboBox,
+    QTextEdit,
+    QVBoxLayout,
 )
 
 from core.library import Library

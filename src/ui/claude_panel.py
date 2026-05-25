@@ -2,23 +2,22 @@
 
 from __future__ import annotations
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
     QComboBox,
-    QFrame,
     QHBoxLayout,
     QLabel,
     QPushButton,
     QSizePolicy,
-    QSplitter,
     QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
-from core.config import Config
 from claude.claude_agent import ClaudeAgent, ClaudeAgentManager
 from claude.context_builder import BookContext
+from core.config import Config
+
 from .widgets.terminal_widget import TerminalWidget
 
 

@@ -2,20 +2,19 @@
 
 from __future__ import annotations
 
-from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
     QListWidget,
     QListWidgetItem,
     QPushButton,
-    QHBoxLayout,
-    QLabel,
+    QVBoxLayout,
+    QWidget,
 )
-from PyQt6.QtGui import QIcon
 
-from core.library import Library
 from core.book import Bookmark
+from core.library import Library
 
 
 class BookmarkWidget(QWidget):

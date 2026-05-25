@@ -2,22 +2,20 @@
 
 from __future__ import annotations
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
-    QWidget,
     QHBoxLayout,
-    QPushButton,
-    QSlider,
     QLabel,
+    QPushButton,
     QSpinBox,
+    QWidget,
 )
-from PyQt6.QtCore import Qt
 
 from ui.widgets.page_canvas import (
-    MODE_SINGLE_CONTINUOUS,
     MODE_DOUBLE_CONTINUOUS,
-    MODE_SINGLE_FLIP,
     MODE_DOUBLE_FLIP,
+    MODE_SINGLE_CONTINUOUS,
+    MODE_SINGLE_FLIP,
 )
 
 

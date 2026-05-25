@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import networkx as nx
 
 from core.storage import Storage
+
 from .models import Concept, ConceptLink
 
 
@@ -47,7 +46,7 @@ class GraphEngine:
             "concepts.json", [c.to_dict() for c in self._concepts.values()]
         )
         self._storage.write_json(
-            "concept_links.json", [l.to_dict() for l in self._links.values()]
+            "concept_links.json", [link.to_dict() for link in self._links.values()]
         )
 
     # ── CRUD ──────────────────────────────────────────
@@ -73,8 +72,8 @@ class GraphEngine:
     def remove_concept(self, concept_id: str) -> None:
         self._concepts.pop(concept_id, None)
         links_to_remove = [
-            lid for lid, l in self._links.items()
-            if l.source_id == concept_id or l.target_id == concept_id
+            lid for lid, link in self._links.items()
+            if link.source_id == concept_id or link.target_id == concept_id
         ]
         for lid in links_to_remove:
             self._links.pop(lid, None)

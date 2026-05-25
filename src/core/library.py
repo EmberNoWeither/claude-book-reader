@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 import fitz  # PyMuPDF
+
+from utils.logger import get_logger
 
 from .book import Book, Bookmark, Category, Tag
 from .config import Config
 from .storage import Storage
+
+_log = get_logger(__name__)
 
 
 class Library:
@@ -64,12 +66,21 @@ class Library:
     def import_pdf(self, file_path: str | Path) -> Book:
         """导入 PDF：提取元数据 → 创建 Book → 入库"""
         file_path = Path(file_path).resolve()
+        if not file_path.exists():
+            raise FileNotFoundError(f"PDF not found: {file_path}")
 
-        doc = fitz.open(file_path)
-        meta = doc.metadata or {}
-        toc = doc.get_toc()
-        pages = doc.page_count
-        doc.close()
+        try:
+            doc = fitz.open(file_path)
+        except Exception as e:
+            _log.exception("Failed to open PDF: %s", file_path)
+            raise ValueError(f"无法打开 PDF: {e}") from e
+
+        try:
+            meta = doc.metadata or {}
+            toc = doc.get_toc()
+            pages = doc.page_count
+        finally:
+            doc.close()
 
         title = meta.get("title", "") or file_path.stem
         author = meta.get("author", "") or ""
@@ -94,6 +105,7 @@ class Library:
             "last_sync_to_obsidian": "",
         })
 
+        _log.info("Imported PDF: %s (%d pages, id=%s)", title, pages, book.id)
         return book
 
     # ═══════════════════════════════════════════════════

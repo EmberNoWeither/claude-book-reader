@@ -2,15 +2,14 @@
 
 from PyQt6.QtWidgets import (
     QDialog,
-    QVBoxLayout,
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QPushButton,
+    QVBoxLayout,
 )
 
 from core.library import Library
-
 
 TAG_COLORS = [
     "#e74c3c", "#e67e22", "#f1c40f", "#2ecc71",

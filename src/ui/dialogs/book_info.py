@@ -1,25 +1,22 @@
 """图书信息编辑对话框"""
 
-from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
     QDialog,
-    QVBoxLayout,
-    QHBoxLayout,
+    QDialogButtonBox,
     QFormLayout,
+    QHBoxLayout,
+    QLabel,
     QLineEdit,
     QSpinBox,
-    QComboBox,
     QTextEdit,
-    QPushButton,
-    QLabel,
-    QDialogButtonBox,
-    QCheckBox,
-    QScrollArea,
+    QVBoxLayout,
     QWidget,
 )
 
-from core.library import Library
 from core.book import Book
+from core.library import Library
 
 
 class BookInfoDialog(QDialog):

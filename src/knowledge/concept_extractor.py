@@ -7,8 +7,12 @@ import re
 
 from PyQt6.QtCore import QObject, pyqtSignal
 
-from .models import Concept, ConceptLink
+from utils.logger import get_logger
+
 from .graph_engine import GraphEngine
+from .models import Concept, ConceptLink
+
+_log = get_logger(__name__)
 
 
 class ConceptExtractor(QObject):
@@ -69,5 +73,6 @@ class ConceptExtractor(QObject):
             if isinstance(data, list):
                 return data
             return None
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
+            _log.warning("Failed to parse concept JSON: %s", e)
             return None

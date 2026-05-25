@@ -1,7 +1,6 @@
 """标签芯片组件 — 小型彩色标签"""
 
 from PyQt6.QtWidgets import QLabel
-from PyQt6.QtCore import Qt
 
 
 class TagChip(QLabel):

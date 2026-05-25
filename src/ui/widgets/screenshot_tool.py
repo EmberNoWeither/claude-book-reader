@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 
 from PyQt6.QtCore import QPoint, QRect, Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QCursor, QPainter, QPen, QPixmap
+from PyQt6.QtGui import QColor, QCursor, QPainter, QPixmap
 from PyQt6.QtWidgets import QApplication, QRubberBand, QWidget
 
 

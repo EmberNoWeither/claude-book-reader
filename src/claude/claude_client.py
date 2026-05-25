@@ -54,7 +54,7 @@ def _build_prompt(ctx: ClaudeContext) -> str:
     if ic.notes and ctx.action == "optimize_notes":
         lines += [
             "",
-            f"【用户笔记】",
+            "【用户笔记】",
             ic.notes,
             "",
             f"【优化风格】{ic.optimization_style or 'refine'}",
@@ -183,6 +183,8 @@ class ClaudeClient(QObject):
         try:
             obj = json.loads(line)
         except json.JSONDecodeError:
+            from utils.logger import get_logger
+            get_logger(__name__).debug("Non-JSON stream line: %s", line[:200])
             return ""
         msg_type = obj.get("type", "")
         if msg_type == "assistant":

@@ -5,8 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from whoosh import index
-from whoosh.fields import Schema, TEXT, ID, NUMERIC, STORED
-from whoosh.qparser import MultifieldParser, FuzzyTermPlugin
+from whoosh.fields import ID, NUMERIC, STORED, TEXT, Schema
+from whoosh.qparser import FuzzyTermPlugin, MultifieldParser
 
 
 class SearchEngine:
