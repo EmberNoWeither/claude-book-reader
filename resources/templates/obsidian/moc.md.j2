@@ -1,0 +1,16 @@
+---
+title: "知识地图"
+created: {{ export_date }}
+---
+
+# 知识地图 (Map of Content)
+
+## 书籍
+
+{% for book in books %}- [[{{ book.title }}]] — {{ book.author }} ({{ book.reading_status }}, {{ book.progress_pct | round(0) }}%)
+{% endfor %}
+
+## 核心概念
+
+{% for concept in concepts %}- [[{{ concept.name }}]]{% if concept.description %} — {{ concept.description[:60] }}{% endif %}
+{% endfor %}

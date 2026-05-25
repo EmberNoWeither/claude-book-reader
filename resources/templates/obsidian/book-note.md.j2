@@ -1,0 +1,35 @@
+---
+title: "{{ book.title }}"
+author: "{{ book.author }}"
+tags: [{% for t in book.tags %}{{ t }}{% if not loop.last %}, {% endif %}{% endfor %}]
+status: {{ book.reading_status }}
+progress: {{ book.progress_pct | round(0) }}%
+created: {{ export_date }}
+---
+
+# {{ book.title }}
+
+> {{ book.author }}{% if book.publisher %} · {{ book.publisher }}{% endif %}{% if book.year %} · {{ book.year }}{% endif %}
+
+## 阅读进度
+
+当前第 {{ book.current_page + 1 }}/{{ book.pages }} 页 ({{ book.progress_pct | round(0) }}%)
+
+## 笔记
+
+{% for note in notes %}
+### P{{ note.page + 1 }} — {{ note.created_at[:10] }}
+
+{{ note.content }}
+{% if note.optimized_content %}
+
+> [!note] AI 优化版本
+> {{ note.optimized_content }}
+{% endif %}
+
+{% endfor %}
+
+## 相关概念
+
+{% for concept in concepts %}- [[{{ concept.name }}]]
+{% endfor %}

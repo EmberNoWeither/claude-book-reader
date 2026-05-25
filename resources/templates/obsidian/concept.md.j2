@@ -1,0 +1,19 @@
+---
+aliases: [{% for a in concept.aliases %}"{{ a }}"{% if not loop.last %}, {% endif %}{% endfor %}]
+tags: [概念{% for t in concept.tags %}, {{ t }}{% endfor %}]
+created: {{ export_date }}
+---
+
+# {{ concept.name }}
+
+{{ concept.description }}
+
+## 相关概念
+
+{% for rel in relations %}- [[{{ rel.target_name }}]] — {{ rel.relation_type }} (强度: {{ rel.strength }}){% if rel.description %}: {{ rel.description }}{% endif %}
+{% endfor %}
+
+## 来源
+
+{% for src in concept.source_books %}- 《{{ src.book_title or src.book_id }}》{% if src.chapter %} {{ src.chapter }}{% endif %}{% if src.page %} (P{{ src.page }}){% endif %}
+{% endfor %}
