@@ -14,11 +14,13 @@ from .context_builder import ClaudeContext
 _TMP_DIR = Path(tempfile.gettempdir()) / "claude-book-reader" / "prompts"
 
 
-def _build_args(model: str = "") -> tuple[str, list[str]]:
+def _build_args(model: str = "", no_tools: bool = False) -> tuple[str, list[str]]:
     """返回 (program, args)，prompt 通过 stdin 文件传入"""
     claude_args = ["-p", "-", "--output-format", "stream-json", "--verbose"]
     if model:
         claude_args += ["--model", model]
+    if no_tools:
+        claude_args += ["--tools", ""]
     if sys.platform == "win32":
         return "cmd", ["/c", "claude"] + claude_args
     return "claude", claude_args
@@ -89,7 +91,10 @@ def _build_prompt(ctx: ClaudeContext) -> str:
         }
         lines += ["", action_prompts.get(ctx.action, "请提供帮助。")]
 
-    lines.append("\n请用 Markdown 格式回答，语言与用户问题保持一致（默认中文）。数学公式请使用标准 LaTeX 语法，行内公式用 $...$，块级公式用 $$...$$，确保下标用 _{} 包裹（如 \\sum_{i=1}^{n}）。")
+    if ctx.no_tools:
+        lines.append("\n重要：你只需要直接输出纯文本内容，不要尝试写入文件、创建目录或执行任何操作。直接在回复中输出所有内容。")
+    else:
+        lines.append("\n请用 Markdown 格式回答，语言与用户问题保持一致（默认中文）。数学公式请使用标准 LaTeX 语法，行内公式用 $...$，块级公式用 $$...$$，确保下标用 _{} 包裹（如 \\sum_{i=1}^{n}）。")
     return "\n".join(lines)
 
 
@@ -132,7 +137,7 @@ class ClaudeClient(QObject):
         self._process.errorOccurred.connect(self._on_process_error)
         self._process.finished.connect(self._on_finished)
 
-        program, args = _build_args(self._model)
+        program, args = _build_args(self._model, no_tools=ctx.no_tools)
         self._process.start(program, args)
 
     def cancel(self) -> None:

@@ -136,6 +136,7 @@ class BookPreviewDialog(QDialog):
             context=InteractionContext(type="general"),
             user_query=prompt,
             history=[],
+            no_tools=True,
         )
         self._agent.send(ctx)
 

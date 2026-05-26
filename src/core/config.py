@@ -44,6 +44,9 @@ DEFAULT_CONFIG = {
         "idle_timeout_minutes": 5,
         "flush_interval_seconds": 30,
     },
+    "code_exercises": {
+        "output_dir": "",  # 用户选择的代码练习输出目录
+    },
 }
 
 

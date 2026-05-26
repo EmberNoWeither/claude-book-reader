@@ -29,6 +29,7 @@ class ReadingView(QWidget):
     book_closed = pyqtSignal()
     ask_claude = pyqtSignal(str, int)    # selected_text, page — 用户点击"问 Claude"
     create_note = pyqtSignal(str, int, object)   # selected_text, page, pdf_rects
+    html_explanation_requested = pyqtSignal(str)  # selected_text
 
     def __init__(self, library: Library, parent=None) -> None:
         super().__init__(parent)
@@ -187,6 +188,10 @@ class ReadingView(QWidget):
         act_note.triggered.connect(self._on_create_note)
         menu.addAction(act_note)
 
+        act_html = QAction("🎬  生成交互讲解", self)
+        act_html.triggered.connect(self._on_html_explanation)
+        menu.addAction(act_html)
+
         menu.exec(pos)
 
     def _on_ask_claude(self) -> None:
@@ -207,6 +212,10 @@ class ReadingView(QWidget):
         # 翻译也走 ask_claude 信号，面板自动加前缀
         if self._selected_text:
             self.ask_claude.emit(f"[翻译] {self._selected_text}", self._selected_page)
+
+    def _on_html_explanation(self) -> None:
+        if self._selected_text:
+            self.html_explanation_requested.emit(self._selected_text)
 
     def _on_selection_cleared(self) -> None:
         self._sel_label.hide()

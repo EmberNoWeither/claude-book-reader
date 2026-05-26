@@ -147,6 +147,14 @@ class MainWindow(QMainWindow):
         act_view_preview.setShortcut(QKeySequence("Ctrl+Shift+P"))
         act_view_preview.triggered.connect(self._on_view_current_book_preview)
         tools_menu.addAction(act_view_preview)
+        act_html_list = QAction("交互式讲解列表", self)
+        act_html_list.setShortcut(QKeySequence("Ctrl+Shift+H"))
+        act_html_list.triggered.connect(self._on_show_html_list)
+        tools_menu.addAction(act_html_list)
+        act_code_exercise = QAction("生成代码练习", self)
+        act_code_exercise.setShortcut(QKeySequence("Ctrl+Shift+E"))
+        act_code_exercise.triggered.connect(self._on_code_exercise)
+        tools_menu.addAction(act_code_exercise)
         tools_menu.addSeparator()
         act_settings = QAction("设置...", self)
         act_settings.setShortcut(QKeySequence("Ctrl+,"))
@@ -237,6 +245,7 @@ class MainWindow(QMainWindow):
         self._reading_view.book_closed.connect(self._on_book_closed)
         self._reading_view.ask_claude.connect(self._on_ask_claude)
         self._reading_view.create_note.connect(self._on_create_note)
+        self._reading_view.html_explanation_requested.connect(self._on_html_explanation_from_text)
         self._reading_view.canvas.note_highlight_right_clicked.connect(self._on_note_highlight_menu)
         self._splitter_main.addWidget(self._reading_view)
 
@@ -253,6 +262,7 @@ class MainWindow(QMainWindow):
         self._notes_panel.extract_concepts_requested.connect(self._on_extract_concepts)
         self._notes_panel.optimize_title_requested.connect(self._on_optimize_title)
         self._notes_panel.followup_requested.connect(self._on_note_followup)
+        self._notes_panel.html_explanation_requested.connect(self._on_html_explanation_from_note)
         self._notes_panel.set_live_page_getter(lambda: self._reading_view.canvas.current_page)
         self._right_tabs.addTab(self._notes_panel, "📝 笔记")
 
@@ -675,6 +685,121 @@ class MainWindow(QMainWindow):
             return
         from .dialogs.preview_viewer import PreviewViewerDialog
         dlg = PreviewViewerDialog(book, preview_data["preview"], self)
+        dlg.exec()
+
+    # ── HTML 交互讲解 ────────────────────────────────
+
+    def _on_html_explanation_from_text(self, text: str) -> None:
+        """从选中文本生成交互式 HTML 讲解"""
+        book_id = getattr(self._reading_view, "_book_id", "")
+        if not book_id:
+            return
+        self._generate_html_explanation(book_id, text)
+
+    def _on_html_explanation_from_note(self, note_id: str) -> None:
+        """从笔记内容生成交互式 HTML 讲解"""
+        book_id = getattr(self._reading_view, "_book_id", "")
+        if not book_id:
+            return
+        note = self._notes_panel._note_manager.get_note(book_id, note_id)
+        if not note:
+            return
+        content = note.content
+        if note.highlighted_text:
+            content = f"{note.highlighted_text}\n\n{content}"
+        self._generate_html_explanation(book_id, content)
+
+    def _generate_html_explanation(self, book_id: str, content: str,
+                                   edit_request: str = "",
+                                   existing_html: str = "",
+                                   html_id: str = "") -> None:
+        book = self._library.get_book(book_id)
+        if not book:
+            return
+        from claude.context_builder import BookContext
+        book_ctx = BookContext(
+            title=book.title, author=book.author or "",
+            current_page=0, total_pages=book.pages,
+        )
+        agent = self._agent_manager.get_or_create(book_id, book_ctx)
+        if agent.is_busy:
+            QMessageBox.information(self, "提示", "Claude 正在处理其他任务，请稍后再试")
+            return
+        storage = self._storage or Storage(self._config.data_dir)
+        from .dialogs.html_explanation import HtmlExplanationDialog
+        dlg = HtmlExplanationDialog(
+            book, content, storage, agent, self,
+            edit_request=edit_request, existing_html=existing_html, html_id=html_id,
+        )
+        dlg.finished.connect(lambda hid: self._open_html_viewer(book_id, hid))
+        dlg.exec()
+
+    def _on_show_html_list(self) -> None:
+        book_id = getattr(self._reading_view, "_book_id", "")
+        if not book_id:
+            QMessageBox.information(self, "提示", "请先打开一本书")
+            return
+        storage = self._storage or Storage(self._config.data_dir)
+        from .dialogs.html_list import HtmlListDialog
+        dlg = HtmlListDialog(book_id, storage, self)
+        dlg.open_requested.connect(lambda hid: self._open_html_viewer(book_id, hid))
+        dlg.exec()
+
+    def _open_html_viewer(self, book_id: str, html_id: str) -> None:
+        storage = self._storage or Storage(self._config.data_dir)
+        html_dir = storage.book_dir(book_id) / "html_explanations"
+        html_path = html_dir / f"{html_id}.html"
+        if not html_path.exists():
+            QMessageBox.warning(self, "错误", "HTML 文件不存在")
+            return
+        import json
+        meta_path = html_dir / "index.json"
+        title = html_id
+        if meta_path.exists():
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
+            entry = next((m for m in meta if m["id"] == html_id), None)
+            if entry:
+                title = entry.get("title", html_id)
+
+        from .dialogs.html_viewer import HtmlViewerDialog
+        dlg = HtmlViewerDialog(html_path, html_id, title, self)
+        dlg.edit_requested.connect(
+            lambda hid, req: self._on_html_edit(book_id, hid, req)
+        )
+        dlg.exec()
+
+    def _on_html_edit(self, book_id: str, html_id: str, request: str) -> None:
+        storage = self._storage or Storage(self._config.data_dir)
+        html_path = storage.book_dir(book_id) / "html_explanations" / f"{html_id}.html"
+        if not html_path.exists():
+            return
+        existing_html = html_path.read_text(encoding="utf-8")
+        self._generate_html_explanation(
+            book_id, "", edit_request=request,
+            existing_html=existing_html, html_id=html_id,
+        )
+
+    # ── 代码练习生成 ─────────────────────────────────
+
+    def _on_code_exercise(self) -> None:
+        book_id = getattr(self._reading_view, "_book_id", "")
+        if not book_id:
+            QMessageBox.information(self, "提示", "请先打开一本书")
+            return
+        book = self._library.get_book(book_id)
+        if not book:
+            return
+        from claude.context_builder import BookContext
+        book_ctx = BookContext(
+            title=book.title, author=book.author or "",
+            current_page=0, total_pages=book.pages,
+        )
+        agent = self._agent_manager.get_or_create(book_id, book_ctx)
+        if agent.is_busy:
+            QMessageBox.information(self, "提示", "Claude 正在处理其他任务，请稍后再试")
+            return
+        from .dialogs.code_exercise import CodeExerciseDialog
+        dlg = CodeExerciseDialog(book, self._config, agent, self)
         dlg.exec()
 
     def _on_save_claude_to_notes(self, text: str, page: int = -1, pdf_rects=None) -> None:

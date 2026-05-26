@@ -40,6 +40,7 @@ class ClaudeContext:
     user_query: str = ""
     history: list[dict] = field(default_factory=list)
     version: str = "1.0"
+    no_tools: bool = False         # 禁用 CLI 工具（纯文本输出场景）
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
