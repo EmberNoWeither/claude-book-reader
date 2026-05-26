@@ -231,3 +231,46 @@ R1（测试 + 异常处理 + 性能基线）作为独立提交点，完成后才
 - 全局异常钩子接入，日志按天滚动
 - 大 PDF 性能基线记录到 `docs/perf-baseline.md`
 
+---
+
+## 九、R2 后续功能增强（2026-05-26）
+
+> R2 主体（阅读统计 + 仪表盘 + 主题系统）已合入 `87cfab7`。本节记录 R2 之后追加的三项功能。
+
+### 9.1 护眼模式
+
+**功能**：在 PDF 渲染结果上叠加暖色滤镜（羊皮卷质感）+ 用户可调亮度（50%-150%）。
+
+**实现**：
+- `page_canvas.py` 新增 `_apply_eye_filter(pixmap)` — 使用 `QPainter.CompositionMode_Multiply` 叠加 `#F5EBD2` 暖色层；亮度通过半透明黑/白层实现
+- `reading_toolbar.py` 新增"🌙 护眼"切换按钮 + 亮度 QSlider
+- 切换时调用 `_refresh_pages()` 清除已渲染页面并重新渲染
+
+**文件**：`page_canvas.py`, `reading_toolbar.py`, `reading_view.py`
+
+### 9.2 笔记内容追问
+
+**功能**：用户可对已有笔记内容向 Claude 追问，回答自动追加到笔记末尾。
+
+**实现**：
+- `notes_panel.py` 右键菜单新增"追问"选项 → 弹出 `QInputDialog` 输入问题
+- 发射 `followup_requested(note_id, question)` 信号
+- `main_window.py` 接收信号，通过 `ClaudeAgent.send_note_followup()` 发送
+- 回答追加格式：`\n\n---\n**追问**: question\n**回答**: response`
+
+**文件**：`notes_panel.py`, `main_window.py`, `claude_agent.py`, `context_builder.py`
+
+### 9.3 全书预览总结
+
+**功能**：在开始阅读前，让 Claude 对全书各章节进行总结分析，结果作为后续提问的上下文。
+
+**实现**：
+- `library_panel.py` 右键菜单新增"🤖 AI 全书预览总结"
+- 确认对话框提醒 token 消耗后，打开 `BookPreviewDialog` 流式弹窗
+- 提取各章节文本样本（有 TOC 取章节首 2 页，无 TOC 等间隔采样），限制 30K 字符
+- 结果实时流式显示（`response_chunk` 信号），完成后保存到 `books/{id}/book_preview.json`
+- 打开书时自动加载 preview 注入 `ClaudeAgent` 上下文（`set_book_preview`）
+
+**输出结构**：全书概述 → 各章节总结 → 知识体系 → 阅读建议 → 阅读目标
+
+**文件**：`book_preview.py`(新增), `library_panel.py`, `main_window.py`, `claude_agent.py`

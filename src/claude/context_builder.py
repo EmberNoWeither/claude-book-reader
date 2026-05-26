@@ -159,6 +159,21 @@ class ContextBuilder:
             history=history,
         )
 
+    def build_note_followup(
+        self,
+        book: BookContext,
+        note_content: str,
+        question: str,
+        history: list[dict],
+    ) -> ClaudeContext:
+        return ClaudeContext(
+            action="note_followup",
+            book=book,
+            context=InteractionContext(type="general", notes=note_content),
+            user_query=question,
+            history=history,
+        )
+
     def write_context_file(self, ctx: ClaudeContext) -> Path:
         """将上下文写入临时 JSON 文件，返回文件路径"""
         path = self._tmp_dir / f"ctx-{int(time.time() * 1000)}.json"

@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QSlider,
     QSpinBox,
     QWidget,
 )
@@ -30,6 +31,8 @@ class ReadingToolbar(QWidget):
     zoom_original = pyqtSignal()
     go_to_page = pyqtSignal(int)
     add_bookmark = pyqtSignal()
+    eye_protection_toggled = pyqtSignal(bool)
+    brightness_changed = pyqtSignal(int)
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
@@ -138,6 +141,27 @@ class ReadingToolbar(QWidget):
         btn_bm.clicked.connect(self.add_bookmark.emit)
         btn_bm.setProperty("variant", "toolbar")
         layout.addWidget(btn_bm)
+
+        layout.addSpacing(12)
+
+        # Eye protection controls
+        self._btn_eye = QPushButton("🌙 护眼")
+        self._btn_eye.setCheckable(True)
+        self._btn_eye.setProperty("variant", "mode")
+        self._btn_eye.setToolTip("护眼模式：叠加暖色滤镜")
+        self._btn_eye.toggled.connect(self.eye_protection_toggled.emit)
+        layout.addWidget(self._btn_eye)
+
+        bright_label = QLabel("亮度")
+        bright_label.setObjectName("total_label")
+        layout.addWidget(bright_label)
+        self._brightness_slider = QSlider(Qt.Orientation.Horizontal)
+        self._brightness_slider.setRange(50, 150)
+        self._brightness_slider.setValue(100)
+        self._brightness_slider.setFixedWidth(80)
+        self._brightness_slider.setToolTip("调节 PDF 亮度 (50%-150%)")
+        self._brightness_slider.valueChanged.connect(self.brightness_changed.emit)
+        layout.addWidget(self._brightness_slider)
 
     def _on_mode(self, mode: str) -> None:
         self._btn_single_cont.setChecked(mode == MODE_SINGLE_CONTINUOUS)

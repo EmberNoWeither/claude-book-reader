@@ -25,12 +25,16 @@ class ClaudeAgent(QObject):
         super().__init__(parent)
         self.book = book
         self._history: list[dict] = []
+        self._book_preview: str = ""
         self._client = ClaudeClient(self, model=model)
         self._client.response_chunk.connect(self.response_chunk)
         self._client.response_finished.connect(self._on_finished)
         self._client.error_occurred.connect(self._on_error)
         self._pending_user_msg = ""
         self._busy = False
+
+    def set_book_preview(self, preview: str) -> None:
+        self._book_preview = preview
 
     def set_model(self, model: str) -> None:
         self._client.set_model(model)
@@ -47,7 +51,10 @@ class ClaudeAgent(QObject):
         """发送消息（附带完整历史）"""
         if self._busy:
             return
-        ctx.history = list(self._history)
+        history = list(self._history)
+        if self._book_preview and ctx.action != "book_preview":
+            history = [{"role": "system", "content": f"[全书预览总结]\n{self._book_preview}"}] + history
+        ctx.history = history
         self._pending_user_msg = ctx.user_query or f"[{ctx.action}]"
         self._set_busy(True)
         self._client.invoke(ctx)
@@ -115,6 +122,16 @@ class ClaudeAgent(QObject):
         ctx = builder.build_concept_extraction(
             book=self.book,
             notes_content=notes_content,
+            history=self._history,
+        )
+        self.send(ctx)
+
+    def send_note_followup(self, note_content: str, question: str) -> None:
+        builder = ContextBuilder()
+        ctx = builder.build_note_followup(
+            book=self.book,
+            note_content=note_content,
+            question=question,
             history=self._history,
         )
         self.send(ctx)

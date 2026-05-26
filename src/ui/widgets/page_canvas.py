@@ -9,6 +9,7 @@ from PyQt6.QtGui import (
     QColor,
     QPainter,
     QPen,
+    QPixmap,
 )
 from PyQt6.QtWidgets import (
     QFrame,
@@ -73,6 +74,10 @@ class PageCanvas(QGraphicsView):
 
         # User-set zoom flag: once user changes zoom, don't auto-fit on resize
         self._user_set_zoom: bool = False
+
+        # Eye protection mode
+        self._eye_protection: bool = False
+        self._brightness: int = 100  # 50-150, 100 = normal
 
         self._scene = QGraphicsScene(self)
         self.setScene(self._scene)
@@ -199,6 +204,60 @@ class PageCanvas(QGraphicsView):
         pw, _ = self._engine.page_size(0)
         vw = max(self.viewport().width(), 200) - 20
         return max(0.1, vw / pw)
+
+    # ═══════════════════════════════════════
+    # Eye protection
+    # ═══════════════════════════════════════
+
+    def set_eye_protection(self, enabled: bool) -> None:
+        if self._eye_protection == enabled:
+            return
+        self._eye_protection = enabled
+        self._refresh_pages()
+
+    def set_brightness(self, value: int) -> None:
+        value = max(50, min(150, value))
+        if self._brightness == value:
+            return
+        self._brightness = value
+        self._refresh_pages()
+
+    @property
+    def eye_protection(self) -> bool:
+        return self._eye_protection
+
+    @property
+    def brightness(self) -> int:
+        return self._brightness
+
+    def _apply_eye_filter(self, pixmap: QPixmap) -> QPixmap:
+        if not self._eye_protection and self._brightness == 100:
+            return pixmap
+        img = pixmap.toImage()
+        painter = QPainter(img)
+        painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceAtop)
+        # Brightness adjustment
+        if self._brightness < 100:
+            opacity = (100 - self._brightness) / 100.0
+            painter.fillRect(img.rect(), QColor(0, 0, 0, int(opacity * 180)))
+        elif self._brightness > 100:
+            opacity = (self._brightness - 100) / 100.0
+            painter.fillRect(img.rect(), QColor(255, 255, 255, int(opacity * 120)))
+        # Warm overlay (parchment tint)
+        if self._eye_protection:
+            painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_Multiply)
+            painter.fillRect(img.rect(), QColor(245, 235, 210, 255))
+        painter.end()
+        return QPixmap.fromImage(img)
+
+    def _refresh_pages(self) -> None:
+        """Re-render all visible pages (e.g. after filter change)."""
+        if not self._engine:
+            return
+        for page_num in list(self._page_items.keys()):
+            item = self._page_items.pop(page_num)
+            self._scene.removeItem(item)
+        self._update_visible_items()
 
     def _viewport_w(self) -> int:
         return max(self.viewport().width(), 400)
@@ -423,11 +482,10 @@ class PageCanvas(QGraphicsView):
         except Exception:
             from utils.logger import get_logger
             get_logger(__name__).exception("Render failed for page %d", page_num)
-            # 占位：用空 pixmap 防止后续 KeyError
-            from PyQt6.QtGui import QPixmap
             pixmap = QPixmap(int(self._page_w[page_num] * self._dpr) if page_num < len(self._page_w) else 600,
                              int(self._page_h[page_num] * self._dpr) if page_num < len(self._page_h) else 800)
             pixmap.fill(QColor("#3b1f1f"))
+        pixmap = self._apply_eye_filter(pixmap)
         item = QGraphicsPixmapItem(pixmap)
         item.setScale(1.0 / self._dpr)
         item.setData(Qt.ItemDataRole.UserRole, page_num)

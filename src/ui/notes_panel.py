@@ -32,6 +32,7 @@ class NotesPanel(QWidget):
     optimize_requested = pyqtSignal(str, str)  # note_id, style
     extract_concepts_requested = pyqtSignal(str)  # book_id
     optimize_title_requested = pyqtSignal(str)  # note_id
+    followup_requested = pyqtSignal(str, str)  # note_id, question
 
     def __init__(self, storage: Storage, parent=None) -> None:
         super().__init__(parent)
@@ -300,6 +301,7 @@ class NotesPanel(QWidget):
 
         menu = QMenu(self)
         act_preview = menu.addAction("阅览")
+        act_followup = menu.addAction("追问")
         menu.addSeparator()
         act_edit_title = menu.addAction("编辑标题")
         act_ai_title = menu.addAction("AI优化标题")
@@ -317,6 +319,14 @@ class NotesPanel(QWidget):
             note = self._note_manager.get_note(self._book_id, note_id)
             if note:
                 self._show_note_preview(note)
+        elif action == act_followup:
+            note = self._note_manager.get_note(self._book_id, note_id)
+            if note:
+                question, ok = QInputDialog.getText(
+                    self, "追问笔记内容", "输入你的问题：",
+                )
+                if ok and question.strip():
+                    self.followup_requested.emit(note_id, question.strip())
         elif action == act_edit_title:
             note = self._note_manager.get_note(self._book_id, note_id)
             if note:

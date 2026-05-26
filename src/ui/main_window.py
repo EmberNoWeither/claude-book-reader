@@ -219,6 +219,7 @@ class MainWindow(QMainWindow):
         # 左侧 — 图书库
         self._library_panel = LibraryPanel(self._library)
         self._library_panel.book_selected.connect(self._on_book_selected)
+        self._library_panel.book_preview_requested.connect(self._on_book_preview)
         self._splitter_main.addWidget(self._library_panel)
 
         # 中央 — 阅读区
@@ -246,6 +247,7 @@ class MainWindow(QMainWindow):
         self._notes_panel.optimize_requested.connect(self._on_optimize_note)
         self._notes_panel.extract_concepts_requested.connect(self._on_extract_concepts)
         self._notes_panel.optimize_title_requested.connect(self._on_optimize_title)
+        self._notes_panel.followup_requested.connect(self._on_note_followup)
         self._notes_panel.set_live_page_getter(lambda: self._reading_view.canvas.current_page)
         self._right_tabs.addTab(self._notes_panel, "📝 笔记")
 
@@ -362,6 +364,13 @@ class MainWindow(QMainWindow):
                 total_pages=book.pages,
             )
             self._claude_panel.set_book(book_id, book_ctx)
+            # Load book preview into agent context if available
+            storage = self._storage or Storage(self._config.data_dir)
+            preview_data = storage.read_book_json(book_id, "book_preview.json")
+            if preview_data and preview_data.get("preview"):
+                agent = self._agent_manager.get(book_id)
+                if agent:
+                    agent.set_book_preview(preview_data["preview"])
             self._notes_panel.set_book(book_id)
             self._sync_note_highlights(book_id)
         self._library_panel.refresh()
@@ -604,6 +613,34 @@ class MainWindow(QMainWindow):
         dlg = SettingsDialog(self._config, self._theme_manager, self)
         dlg.exec()
 
+    def _on_book_preview(self, book_id: str) -> None:
+        book = self._library.get_book(book_id)
+        if not book:
+            return
+        r = QMessageBox.question(
+            self, "AI 全书预览总结",
+            f"即将对《{book.title}》进行全书分析。\n\n"
+            "此操作会消耗较多 tokens 且处理时间较长，是否继续？",
+        )
+        if r != QMessageBox.StandardButton.Yes:
+            return
+        # Ensure agent exists for this book
+        from claude.context_builder import BookContext
+        book_ctx = BookContext(
+            title=book.title,
+            author=book.author or "",
+            current_page=0,
+            total_pages=book.pages,
+        )
+        agent = self._agent_manager.get_or_create(book_id, book_ctx)
+        if agent.is_busy:
+            QMessageBox.information(self, "提示", "Claude 正在处理其他任务，请稍后再试")
+            return
+        from .dialogs.book_preview import BookPreviewDialog
+        storage = self._storage or Storage(self._config.data_dir)
+        dlg = BookPreviewDialog(book, storage, agent, self)
+        dlg.exec()
+
     def _on_save_claude_to_notes(self, text: str, page: int = -1, pdf_rects=None) -> None:
         book_id = getattr(self._reading_view, "_book_id", "")
         if not book_id or not text:
@@ -670,6 +707,60 @@ class MainWindow(QMainWindow):
         self._title_generator.set_model(model)
         self._title_generator.generate(note.id, note.content)
         self._statusbar.showMessage("正在AI优化标题...", 5000)
+
+    def _on_note_followup(self, note_id: str, question: str) -> None:
+        """追问笔记内容：发送给 Claude，回答追加到笔记"""
+        book_id = getattr(self._reading_view, "_book_id", "")
+        if not book_id:
+            return
+        note = self._notes_panel._note_manager.get_note(book_id, note_id)
+        if not note:
+            return
+        agent = self._agent_manager.get(book_id)
+        if not agent:
+            QMessageBox.information(self, "追问", "请先打开书籍并与 Claude 建立连接")
+            return
+        if agent.is_busy:
+            QMessageBox.information(self, "追问", "Claude 正在处理中，请稍后再试")
+            return
+        self._followup_note_id = note_id
+        self._followup_question = question
+        agent.response_finished.connect(self._on_followup_done)
+        agent.error_occurred.connect(self._on_followup_error)
+        agent.send_note_followup(note.content, question)
+        self._statusbar.showMessage("正在追问笔记内容...", 0)
+
+    def _on_followup_done(self, response: str) -> None:
+        agent = self.sender()
+        if agent:
+            try:
+                agent.response_finished.disconnect(self._on_followup_done)
+                agent.error_occurred.disconnect(self._on_followup_error)
+            except RuntimeError:
+                pass
+        book_id = getattr(self._reading_view, "_book_id", "")
+        note_id = getattr(self, "_followup_note_id", "")
+        question = getattr(self, "_followup_question", "")
+        if not book_id or not note_id:
+            return
+        note = self._notes_panel._note_manager.get_note(book_id, note_id)
+        if note:
+            appendix = f"\n\n---\n**追问**: {question}\n\n**回答**: {response}"
+            note.content += appendix
+            self._notes_panel._note_manager.update_note(note)
+            self._notes_panel.refresh()
+            self._statusbar.showMessage("追问回答已追加到笔记", 5000)
+
+    def _on_followup_error(self, err: str) -> None:
+        agent = self.sender()
+        if agent:
+            try:
+                agent.response_finished.disconnect(self._on_followup_done)
+                agent.error_occurred.disconnect(self._on_followup_error)
+            except RuntimeError:
+                pass
+        self._statusbar.showMessage("追问失败", 3000)
+        QMessageBox.warning(self, "追问失败", f"错误: {err}")
 
     def _on_note_highlight_menu(self, page: int, global_pos) -> None:
         """Right-click on a note highlight — show context menu."""

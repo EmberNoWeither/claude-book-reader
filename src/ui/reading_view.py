@@ -53,6 +53,8 @@ class ReadingView(QWidget):
         self._toolbar.zoom_original.connect(self._on_zoom_original)
         self._toolbar.go_to_page.connect(self._on_go_to_page)
         self._toolbar.add_bookmark.connect(self._on_add_bookmark)
+        self._toolbar.eye_protection_toggled.connect(self._on_eye_protection)
+        self._toolbar.brightness_changed.connect(self._on_brightness)
         layout.addWidget(self._toolbar)
 
         # Selection status bar (with floating action buttons)
@@ -130,6 +132,12 @@ class ReadingView(QWidget):
             page_number=self._canvas.current_page,
         )
         self._library.add_bookmark(bm)
+
+    def _on_eye_protection(self, enabled: bool) -> None:
+        self._canvas.set_eye_protection(enabled)
+
+    def _on_brightness(self, value: int) -> None:
+        self._canvas.set_brightness(value)
 
     # ═══════════════════════════════
     # Slots — canvas

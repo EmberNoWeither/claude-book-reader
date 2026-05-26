@@ -27,6 +27,7 @@ class LibraryPanel(QWidget):
     """左侧图书库面板：分类树 + 标签过滤 + 图书列表"""
 
     book_selected = pyqtSignal(str)  # book_id
+    book_preview_requested = pyqtSignal(str)  # book_id
 
     def __init__(self, library: Library, parent=None) -> None:
         super().__init__(parent)
@@ -353,6 +354,8 @@ class LibraryPanel(QWidget):
         )
 
         menu.addSeparator()
+        act_preview = menu.addAction("🤖 AI 全书预览总结")
+        menu.addSeparator()
         act_del = menu.addAction("🗑️ 移除")
 
         action = menu.exec(self._book_list.mapToGlobal(pos))
@@ -362,6 +365,8 @@ class LibraryPanel(QWidget):
             from .dialogs.book_info import BookInfoDialog
             BookInfoDialog(self._library, book, self).exec()
             self.refresh()
+        elif action == act_preview:
+            self.book_preview_requested.emit(book_id)
         elif action == act_del:
             from PyQt6.QtWidgets import QMessageBox
             r = QMessageBox.question(
