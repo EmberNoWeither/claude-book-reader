@@ -52,17 +52,13 @@ class NotesPanel(QWidget):
         # Header
         header = QHBoxLayout()
         title = QLabel("📝 笔记")
-        title.setStyleSheet("font-weight: bold; color: #cdd6f4; font-size: 12px;")
+        title.setObjectName("section_header")
         header.addWidget(title)
         header.addStretch()
 
         btn_add = QPushButton("+ 新建")
         btn_add.setFixedHeight(24)
-        btn_add.setStyleSheet(
-            "QPushButton { background: #45475a; color: #cdd6f4; border-radius: 4px;"
-            " padding: 2px 8px; font-size: 11px; }"
-            "QPushButton:hover { background: #585b70; }"
-        )
+        btn_add.setProperty("variant", "toolbar")
         btn_add.clicked.connect(self._on_add_note)
         header.addWidget(btn_add)
 
@@ -70,12 +66,6 @@ class NotesPanel(QWidget):
 
         # Note list
         self._list = QListWidget()
-        self._list.setStyleSheet(
-            "QListWidget { background: #1e1e2e; border: 1px solid #313244; border-radius: 6px; }"
-            "QListWidget::item { padding: 6px; }"
-            "QListWidget::item:hover { background: #313244; }"
-            "QListWidget::item:selected { background: #45475a; }"
-        )
         self._list.itemDoubleClicked.connect(self._on_item_double_clicked)
         self._list.itemClicked.connect(self._on_item_clicked)
         self._list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -87,11 +77,7 @@ class NotesPanel(QWidget):
         action_bar.setContentsMargins(0, 0, 0, 0)
         btn_extract = QPushButton("🧠 提取概念")
         btn_extract.setFixedHeight(28)
-        btn_extract.setStyleSheet(
-            "QPushButton { background: #313244; color: #89b4fa; border: 1px solid #45475a;"
-            " border-radius: 4px; padding: 4px 12px; font-size: 11px; }"
-            "QPushButton:hover { background: #45475a; }"
-        )
+        btn_extract.setProperty("variant", "toolbar")
         btn_extract.setToolTip("从当前书籍笔记中提取关键概念到知识图谱")
         btn_extract.clicked.connect(self._on_extract_concepts)
         action_bar.addWidget(btn_extract)
@@ -101,10 +87,6 @@ class NotesPanel(QWidget):
         # Title input (hidden by default)
         self._title_input = QLineEdit()
         self._title_input.setPlaceholderText("笔记标题（可选）")
-        self._title_input.setStyleSheet(
-            "QLineEdit { background: #1e1e2e; color: #cdd6f4; border: 1px solid #89b4fa;"
-            " border-radius: 4px; padding: 4px; font-size: 12px; }"
-        )
         self._title_input.hide()
         layout.addWidget(self._title_input)
 
@@ -112,10 +94,6 @@ class NotesPanel(QWidget):
         self._editor = QTextEdit()
         self._editor.setMaximumHeight(100)
         self._editor.setPlaceholderText("输入笔记内容...")
-        self._editor.setStyleSheet(
-            "QTextEdit { background: #1e1e2e; color: #cdd6f4; border: 1px solid #89b4fa;"
-            " border-radius: 4px; padding: 4px; font-size: 12px; }"
-        )
         self._editor.hide()
         layout.addWidget(self._editor)
 
@@ -124,19 +102,10 @@ class NotesPanel(QWidget):
         self._editor_btns.setContentsMargins(0, 0, 0, 0)
         btn_save = QPushButton("保存")
         btn_save.setFixedHeight(26)
-        btn_save.setStyleSheet(
-            "QPushButton { background: #89b4fa; color: #1e1e2e; border-radius: 4px;"
-            " padding: 4px 12px; font-size: 11px; font-weight: bold; }"
-            "QPushButton:hover { background: #b4d0ff; }"
-        )
+        btn_save.setProperty("variant", "primary")
         btn_save.clicked.connect(self._on_save_note)
         btn_cancel = QPushButton("取消")
         btn_cancel.setFixedHeight(26)
-        btn_cancel.setStyleSheet(
-            "QPushButton { background: #45475a; color: #cdd6f4; border-radius: 4px;"
-            " padding: 4px 12px; font-size: 11px; }"
-            "QPushButton:hover { background: #585b70; }"
-        )
         btn_cancel.clicked.connect(self._on_cancel_edit)
         self._editor_btns.addStretch()
         self._editor_btns.addWidget(btn_save)

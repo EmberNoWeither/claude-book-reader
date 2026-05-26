@@ -53,7 +53,7 @@ class LibraryPanel(QWidget):
 
         # ── 分类树 ──
         cat_label = QLabel("📁 分类")
-        cat_label.setStyleSheet("font-weight: bold; color: #aaa; font-size: 11px;")
+        cat_label.setObjectName("section_label")
         layout.addWidget(cat_label)
 
         self._cat_tree = QTreeWidget()
@@ -68,7 +68,7 @@ class LibraryPanel(QWidget):
 
         # ── 标签过滤 ──
         tag_label = QLabel("🏷️ 标签")
-        tag_label.setStyleSheet("font-weight: bold; color: #aaa; font-size: 11px;")
+        tag_label.setObjectName("section_label")
         layout.addWidget(tag_label)
 
         self._tag_container = QWidget()
@@ -80,7 +80,7 @@ class LibraryPanel(QWidget):
 
         # ── 图书列表 ──
         list_label = QLabel("📚 图书")
-        list_label.setStyleSheet("font-weight: bold; color: #aaa; font-size: 11px;")
+        list_label.setObjectName("section_label")
         layout.addWidget(list_label)
 
         self._book_list = QListWidget()
@@ -230,10 +230,7 @@ class LibraryPanel(QWidget):
         # "新建标签" 按钮
         btn_new = QPushButton("+")
         btn_new.setFixedSize(24, 24)
-        btn_new.setStyleSheet(
-            "QPushButton { background: #333; color: #aaa; border-radius: 12px; font-size: 14px; }"
-            "QPushButton:hover { background: #555; }"
-        )
+        btn_new.setProperty("variant", "icon")
         btn_new.clicked.connect(self._on_add_tag)
         self._tag_layout.insertWidget(self._tag_layout.count() - 1, btn_new)
 

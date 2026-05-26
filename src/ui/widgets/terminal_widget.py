@@ -68,9 +68,7 @@ class TerminalWidget(QWidget):
         # 对话显示区
         self._browser = QTextBrowser()
         self._browser.setOpenExternalLinks(True)
-        self._browser.setStyleSheet(
-            "QTextBrowser { background: #1e1e2e; color: #cdd6f4; border: none; }"
-        )
+        self._browser.setObjectName("claude_browser")
         self._browser.document().setDefaultStyleSheet(_BUBBLE_CSS)
         layout.addWidget(self._browser, stretch=1)
 
@@ -83,10 +81,7 @@ class TerminalWidget(QWidget):
         self._input = QTextEdit()
         self._input.setPlaceholderText("输入问题，Ctrl+Enter 发送…")
         self._input.setMaximumHeight(80)
-        self._input.setStyleSheet(
-            "QTextEdit { background: #313244; color: #cdd6f4; border: 1px solid #45475a;"
-            " border-radius: 6px; padding: 6px; }"
-        )
+        self._input.setObjectName("claude_input")
         self._input.installEventFilter(self)
         input_layout.addWidget(self._input, stretch=1)
 
@@ -94,21 +89,13 @@ class TerminalWidget(QWidget):
         btn_col.setSpacing(4)
         self._btn_send = QPushButton("发送")
         self._btn_send.setFixedWidth(60)
-        self._btn_send.setStyleSheet(
-            "QPushButton { background: #89b4fa; color: #1e1e2e; border-radius: 4px; padding: 4px; font-weight: bold; }"
-            "QPushButton:hover { background: #b4d0ff; }"
-            "QPushButton:disabled { background: #45475a; color: #6c7086; }"
-        )
+        self._btn_send.setProperty("variant", "primary")
         self._btn_send.clicked.connect(self._submit)
         btn_col.addWidget(self._btn_send)
 
         self._btn_save = QPushButton("存笔记")
         self._btn_save.setFixedWidth(60)
-        self._btn_save.setStyleSheet(
-            "QPushButton { background: #a6e3a1; color: #1e1e2e; border-radius: 4px; padding: 4px; }"
-            "QPushButton:hover { background: #c0f0bb; }"
-            "QPushButton:disabled { background: #45475a; color: #6c7086; }"
-        )
+        self._btn_save.setProperty("variant", "success")
         self._btn_save.setEnabled(False)
         self._btn_save.clicked.connect(self._on_save)
         btn_col.addWidget(self._btn_save)

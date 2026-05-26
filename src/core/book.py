@@ -30,6 +30,8 @@ class Book:
     added_date: str = field(default_factory=lambda: datetime.now().isoformat())
     last_read_date: str = ""
     indexed_pages: int = 0
+    zoom_level: float = 0.0  # 0 = use default (fit_width)
+    reading_mode: str = ""   # empty = use config default
 
     @property
     def progress_pct(self) -> float:
@@ -58,6 +60,8 @@ class Book:
             "added_date": self.added_date,
             "last_read_date": self.last_read_date,
             "indexed_pages": self.indexed_pages,
+            "zoom_level": self.zoom_level,
+            "reading_mode": self.reading_mode,
         }
 
     @classmethod

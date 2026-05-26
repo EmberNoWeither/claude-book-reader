@@ -36,28 +36,19 @@ class BookmarkWidget(QWidget):
 
         header = QHBoxLayout()
         title = QLabel("🔖 书签")
-        title.setStyleSheet("font-weight: bold; color: #aaa; font-size: 11px;")
+        title.setObjectName("section_label")
         header.addWidget(title)
         header.addStretch()
 
         btn_add = QPushButton("+")
         btn_add.setFixedSize(24, 24)
-        btn_add.setStyleSheet(
-            "QPushButton { background: #333; color: #aaa; border-radius: 12px; font-size: 14px; }"
-            "QPushButton:hover { background: #555; }"
-        )
+        btn_add.setProperty("variant", "icon")
         btn_add.clicked.connect(self._on_add)
         header.addWidget(btn_add)
 
         layout.addLayout(header)
 
         self._list = QListWidget()
-        self._list.setStyleSheet(
-            "QListWidget { background: #1e1e2e; border: 1px solid #313244; border-radius: 6px; }"
-            "QListWidget::item { padding: 6px; }"
-            "QListWidget::item:hover { background: #313244; }"
-            "QListWidget::item:selected { background: #45475a; }"
-        )
         self._list.itemDoubleClicked.connect(self._on_jump)
         self._list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self._list.customContextMenuRequested.connect(self._on_context_menu)

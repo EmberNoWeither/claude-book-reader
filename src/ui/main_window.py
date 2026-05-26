@@ -19,6 +19,7 @@ from claude.claude_client import TitleGenerator
 from claude.context_builder import BookContext
 from core.config import Config
 from core.library import Library
+from core.reading_tracker import ReadingTracker
 from core.storage import Storage
 
 from .claude_panel import ClaudePanel
@@ -39,16 +40,21 @@ from .widgets.screenshot_tool import ScreenshotTool
 class MainWindow(QMainWindow):
     """应用主窗口"""
 
-    def __init__(self, library: Library, config: Config, storage: Storage | None = None) -> None:
+    def __init__(self, library: Library, config: Config, storage: Storage | None = None, theme_manager=None) -> None:
         super().__init__()
         self._library = library
         self._config = config
         self._storage = storage
+        self._theme_manager = theme_manager
         self._agent_manager = ClaudeAgentManager(self)
         self._title_generator = TitleGenerator(parent=self)
         self._title_generator.title_generated.connect(self._on_title_generated)
         self._screenshot_tool = ScreenshotTool()
         self._screenshot_tool.screenshot_taken.connect(self._on_screenshot_taken)
+
+        self._tracker = ReadingTracker(
+            storage or Storage(self._config.data_dir), self._config, self
+        )
 
         self.setWindowTitle("Claude Book Reader")
         self.setMinimumSize(1200, 750)
@@ -133,6 +139,15 @@ class MainWindow(QMainWindow):
         act_graph.setShortcut(QKeySequence("Ctrl+Shift+K"))
         act_graph.triggered.connect(self._on_show_graph)
         tools_menu.addAction(act_graph)
+        act_dashboard = QAction("阅读仪表盘", self)
+        act_dashboard.setShortcut(QKeySequence("Ctrl+D"))
+        act_dashboard.triggered.connect(self._on_show_dashboard)
+        tools_menu.addAction(act_dashboard)
+        tools_menu.addSeparator()
+        act_settings = QAction("设置...", self)
+        act_settings.setShortcut(QKeySequence("Ctrl+,"))
+        act_settings.triggered.connect(self._on_show_settings)
+        tools_menu.addAction(act_settings)
 
         # 帮助
         help_menu = mb.addMenu("帮助 (&H)")
@@ -221,11 +236,7 @@ class MainWindow(QMainWindow):
 
         # 右侧 — 书签 + 笔记 Tab
         self._right_tabs = QTabWidget()
-        self._right_tabs.setStyleSheet(
-            "QTabWidget::pane { border: none; }"
-            "QTabBar::tab { background: #1e1e2e; color: #6c7086; padding: 4px 10px; }"
-            "QTabBar::tab:selected { color: #cdd6f4; border-bottom: 2px solid #89b4fa; }"
-        )
+        self._right_tabs.setObjectName("right_tabs")
         self._bookmark_widget = BookmarkWidget(self._library)
         self._bookmark_widget.jump_to_page.connect(self._on_bookmark_jump)
         self._right_tabs.addTab(self._bookmark_widget, "🔖 书签")
@@ -278,7 +289,21 @@ class MainWindow(QMainWindow):
         if state:
             self.restoreState(state)
 
+    def _save_book_view_state(self) -> None:
+        """Persist current book's zoom level and reading mode."""
+        book_id = getattr(self._reading_view, "_book_id", "")
+        if not book_id:
+            return
+        book = self._library.get_book(book_id)
+        if not book:
+            return
+        book.zoom_level = self._reading_view.canvas.display_zoom
+        book.reading_mode = self._reading_view.canvas.mode
+        self._library.update_book(book)
+
     def closeEvent(self, event) -> None:
+        self._tracker.end_session()
+        self._save_book_view_state()
         s = QSettings("ClaudeBookReader", "MainWindow")
         s.setValue("geometry", self.saveGeometry())
         s.setValue("windowState", self.saveState())
@@ -305,11 +330,30 @@ class MainWindow(QMainWindow):
         book = self._library.get_book(book_id)
         if book:
             self._statusbar.set_book(book.title)
-            self._statusbar.set_mode("单页连续")
             self.setWindowTitle(f"{book.title} — Claude Book Reader")
+
+            # Restore reading mode (per-book > config default)
+            mode = book.reading_mode or self._config.get("app", "default_reading_mode", default="single_continuous")
+            self._reading_view.canvas.set_mode(mode)
+            mode_names = {
+                MODE_SINGLE_CONTINUOUS: "单页连续",
+                MODE_DOUBLE_CONTINUOUS: "双页连续",
+                MODE_SINGLE_FLIP: "单页翻页",
+                MODE_DOUBLE_FLIP: "双页翻页",
+            }
+            self._statusbar.set_mode(mode_names.get(mode, "单页连续"))
+
+            # Restore zoom level
+            if book.zoom_level > 0:
+                self._reading_view.canvas.set_zoom(book.zoom_level)
+
             # Restore reading position
             if book.current_page > 0:
                 self._reading_view.canvas.go_to_page(book.current_page)
+
+            # Start reading session
+            self._tracker.start_session(book_id, book.current_page)
+            self._statusbar.set_streak(self._tracker.streak_days())
             # 初始化 Claude Agent
             book_ctx = BookContext(
                 title=book.title,
@@ -323,6 +367,8 @@ class MainWindow(QMainWindow):
         self._library_panel.refresh()
 
     def _on_book_closed(self) -> None:
+        self._tracker.end_session()
+        self._save_book_view_state()
         book_id = getattr(self._reading_view, "_book_id", "")
         self._statusbar.clear_book()
         self._bookmark_widget.set_book("")
@@ -337,6 +383,7 @@ class MainWindow(QMainWindow):
         self._statusbar.set_page(page + 1, total)
         self._claude_panel.update_page(page, "")
         self._notes_panel.set_current_page(page)
+        self._tracker.update_progress(page)
 
     def _on_zoom_changed(self, zoom: float) -> None:
         self._statusbar.set_zoom(int(zoom * 100))
@@ -546,6 +593,17 @@ class MainWindow(QMainWindow):
         dlg = GraphDialog(storage, book_id, self)
         dlg.exec()
 
+    def _on_show_dashboard(self) -> None:
+        from .dialogs.dashboard import DashboardDialog
+        dlg = DashboardDialog(self._tracker, self._library, self)
+        dlg.book_selected.connect(self._on_book_selected)
+        dlg.exec()
+
+    def _on_show_settings(self) -> None:
+        from .dialogs.settings import SettingsDialog
+        dlg = SettingsDialog(self._config, self._theme_manager, self)
+        dlg.exec()
+
     def _on_save_claude_to_notes(self, text: str, page: int = -1, pdf_rects=None) -> None:
         book_id = getattr(self._reading_view, "_book_id", "")
         if not book_id or not text:
@@ -624,11 +682,6 @@ class MainWindow(QMainWindow):
             return
 
         menu = QMenu(self)
-        menu.setStyleSheet(
-            "QMenu { background: #313244; color: #cdd6f4; border: 1px solid #45475a; border-radius: 6px; }"
-            "QMenu::item { padding: 6px 16px; }"
-            "QMenu::item:selected { background: #45475a; }"
-        )
 
         for note in page_notes:
             display = note.title or note.content[:30].replace("\n", " ")

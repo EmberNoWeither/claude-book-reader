@@ -22,11 +22,6 @@ class ReaderStatusBar(QStatusBar):
         self.addPermanentWidget(self._page_label)
         self.addPermanentWidget(self._streak_label)
 
-        self.setStyleSheet(
-            "QStatusBar { background: #16161e; color: #888; border-top: 1px solid #2a2a3a; }"
-            "QLabel { padding: 0 8px; }"
-        )
-
     def set_book(self, title: str) -> None:
         self._book_label.setText(f"📖 {title}")
 

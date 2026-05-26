@@ -57,9 +57,7 @@ class ReadingView(QWidget):
 
         # Selection status bar (with floating action buttons)
         self._sel_label = QLabel("")
-        self._sel_label.setStyleSheet(
-            "QLabel { background: #313244; color: #89b4fa; padding: 3px 12px; font-size: 12px; }"
-        )
+        self._sel_label.setObjectName("sel_label")
         self._sel_label.hide()
         self._sel_label.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         layout.addWidget(self._sel_label)
@@ -165,11 +163,6 @@ class ReadingView(QWidget):
         if not self._selected_text:
             return
         menu = QMenu(self)
-        menu.setStyleSheet(
-            "QMenu { background: #313244; color: #cdd6f4; border: 1px solid #45475a; border-radius: 6px; }"
-            "QMenu::item { padding: 6px 16px; }"
-            "QMenu::item:selected { background: #45475a; }"
-        )
         act_claude = QAction("🤖  问 Claude", self)
         act_claude.triggered.connect(self._on_ask_claude)
         menu.addAction(act_claude)

@@ -58,19 +58,8 @@ class ReadingToolbar(QWidget):
         self._btn_double_flip.setCheckable(True)
         self._btn_double_flip.setToolTip("双页翻页 (Ctrl+4)")
 
-        mode_style = """
-            QPushButton {
-                background: #313244; color: #cdd6f4;
-                border: 1px solid #45475a; border-radius: 4px;
-                padding: 4px 10px; font-size: 12px;
-            }
-            QPushButton:checked { background: #89b4fa; color: #1e1e2e; border-color: #89b4fa; }
-            QPushButton:hover { background: #45475a; }
-            QPushButton:checked:hover { background: #89b4fa; }
-        """
-
         for btn in [self._btn_single_cont, self._btn_double_cont, self._btn_single_flip, self._btn_double_flip]:
-            btn.setStyleSheet(mode_style)
+            btn.setProperty("variant", "mode")
 
         self._btn_single_cont.clicked.connect(lambda: self._on_mode(MODE_SINGLE_CONTINUOUS))
         self._btn_double_cont.clicked.connect(lambda: self._on_mode(MODE_DOUBLE_CONTINUOUS))
@@ -93,7 +82,7 @@ class ReadingToolbar(QWidget):
         self._zoom_label = QLabel("100%")
         self._zoom_label.setFixedWidth(45)
         self._zoom_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._zoom_label.setStyleSheet("color: #cdd6f4; font-size: 12px;")
+        self._zoom_label.setObjectName("zoom_label")
         layout.addWidget(self._zoom_label)
 
         btn_zoom_in = QPushButton("＋")
@@ -113,16 +102,8 @@ class ReadingToolbar(QWidget):
         btn_orig.clicked.connect(self.zoom_original.emit)
         layout.addWidget(btn_orig)
 
-        zoom_btn_style = """
-            QPushButton {
-                background: #313244; color: #cdd6f4;
-                border: 1px solid #45475a; border-radius: 4px;
-                padding: 4px 8px; font-size: 12px;
-            }
-            QPushButton:hover { background: #45475a; }
-        """
         for btn in [btn_zoom_out, btn_zoom_in, btn_fit_w, btn_fit_p, btn_orig]:
-            btn.setStyleSheet(zoom_btn_style)
+            btn.setProperty("variant", "toolbar")
 
         layout.addStretch()
 
@@ -135,14 +116,11 @@ class ReadingToolbar(QWidget):
         self._page_spin = QSpinBox()
         self._page_spin.setFixedWidth(60)
         self._page_spin.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._page_spin.setStyleSheet(
-            "QSpinBox { background: #313244; color: #cdd6f4; border: 1px solid #45475a; border-radius: 4px; }"
-        )
         self._page_spin.valueChanged.connect(self._on_page_spin)
         layout.addWidget(self._page_spin)
 
         self._total_label = QLabel("/ 0")
-        self._total_label.setStyleSheet("color: #6c7086; font-size: 12px;")
+        self._total_label.setObjectName("total_label")
         layout.addWidget(self._total_label)
 
         btn_next = QPushButton("▶")
@@ -151,14 +129,14 @@ class ReadingToolbar(QWidget):
         layout.addWidget(btn_next)
 
         for btn in [btn_prev, btn_next]:
-            btn.setStyleSheet(zoom_btn_style)
+            btn.setProperty("variant", "toolbar")
 
         layout.addSpacing(8)
 
         # Bookmark button
         btn_bm = QPushButton("🔖 添加书签")
         btn_bm.clicked.connect(self.add_bookmark.emit)
-        btn_bm.setStyleSheet(zoom_btn_style)
+        btn_bm.setProperty("variant", "toolbar")
         layout.addWidget(btn_bm)
 
     def _on_mode(self, mode: str) -> None:

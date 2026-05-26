@@ -39,21 +39,18 @@ class ContextPreview(QWidget):
         layout.addWidget(self._icon)
 
         self._label = QLabel("")
-        self._label.setStyleSheet("color: #89b4fa; font-size: 12px;")
+        self._label.setObjectName("ctx_label")
         self._label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self._label.setWordWrap(False)
         layout.addWidget(self._label, stretch=1)
 
         btn_clear = QToolButton()
         btn_clear.setText("✕")
-        btn_clear.setStyleSheet(
-            "QToolButton { color: #6c7086; border: none; font-size: 12px; }"
-            "QToolButton:hover { color: #f38ba8; }"
-        )
+        btn_clear.setObjectName("ctx_clear_btn")
         btn_clear.clicked.connect(self._on_clear)
         layout.addWidget(btn_clear)
 
-        self.setStyleSheet("background: #181825; border-bottom: 1px solid #313244;")
+        self.setObjectName("ctx_preview")
 
     def set_text_selection(self, text: str, page: int) -> None:
         preview = text[:100].replace("\n", " ")
@@ -101,28 +98,21 @@ class ClaudePanel(QWidget):
         # 标题栏
         header = QWidget()
         header.setFixedHeight(32)
-        header.setStyleSheet("background: #181825; border-top: 1px solid #313244;")
+        header.setObjectName("claude_header")
         h_layout = QHBoxLayout(header)
         h_layout.setContentsMargins(8, 0, 8, 0)
 
         title = QLabel("🤖  Claude")
-        title.setStyleSheet("color: #cba6f7; font-weight: bold; font-size: 13px;")
+        title.setObjectName("claude_title")
         h_layout.addWidget(title)
 
         self._book_label = QLabel("")
-        self._book_label.setStyleSheet("color: #6c7086; font-size: 12px;")
+        self._book_label.setObjectName("claude_book_label")
         h_layout.addWidget(self._book_label, stretch=1)
 
         # Model selector
         self._model_combo = QComboBox()
         self._model_combo.setFixedWidth(140)
-        self._model_combo.setStyleSheet(
-            "QComboBox { background: #313244; color: #cdd6f4; border: 1px solid #45475a;"
-            " border-radius: 4px; padding: 2px 6px; font-size: 11px; }"
-            "QComboBox::drop-down { border: none; }"
-            "QComboBox QAbstractItemView { background: #1e1e2e; color: #cdd6f4;"
-            " selection-background-color: #45475a; }"
-        )
         config = Config()
         models = config.get("claude", "available_models", default=[])
         self._model_combo.addItem("默认模型", "")
@@ -138,28 +128,19 @@ class ClaudePanel(QWidget):
 
         btn_screenshot = QPushButton("截图")
         btn_screenshot.setFixedWidth(50)
-        btn_screenshot.setStyleSheet(
-            "QPushButton { background: #45475a; color: #cdd6f4; border-radius: 4px; padding: 2px 6px; font-size: 12px; }"
-            "QPushButton:hover { background: #585b70; }"
-        )
+        btn_screenshot.setProperty("variant", "toolbar")
         btn_screenshot.clicked.connect(self.screenshot_requested)
         h_layout.addWidget(btn_screenshot)
 
         btn_chapter = QPushButton("章节分析")
         btn_chapter.setFixedWidth(70)
-        btn_chapter.setStyleSheet(
-            "QPushButton { background: #45475a; color: #cdd6f4; border-radius: 4px; padding: 2px 6px; font-size: 12px; }"
-            "QPushButton:hover { background: #585b70; }"
-        )
+        btn_chapter.setProperty("variant", "toolbar")
         btn_chapter.clicked.connect(self._on_chapter_analysis)
         h_layout.addWidget(btn_chapter)
 
         btn_clear = QPushButton("清空")
         btn_clear.setFixedWidth(44)
-        btn_clear.setStyleSheet(
-            "QPushButton { background: #45475a; color: #cdd6f4; border-radius: 4px; padding: 2px 6px; font-size: 12px; }"
-            "QPushButton:hover { background: #585b70; }"
-        )
+        btn_clear.setProperty("variant", "toolbar")
         btn_clear.clicked.connect(self._on_clear)
         h_layout.addWidget(btn_clear)
 

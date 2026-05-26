@@ -41,6 +41,8 @@ DEFAULT_CONFIG = {
         "page_cache_size": 20,
         "scroll_speed": 1.0,
         "preload_pages": 5,
+        "idle_timeout_minutes": 5,
+        "flush_interval_seconds": 30,
     },
 }
 

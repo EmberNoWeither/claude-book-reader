@@ -68,7 +68,7 @@ class GraphCanvas(QGraphicsView):
             QPainter.RenderHint.Antialiasing | QPainter.RenderHint.SmoothPixmapTransform
         )
         self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
-        self.setStyleSheet("background: #1e1e2e; border: none;")
+        self.setObjectName("graph_canvas")
 
     def show_graph(self, book_id: str = "", depth: int = 2) -> None:
         self._scene.clear()
@@ -135,7 +135,7 @@ class GraphDialog(QDialog):
         toolbar = QHBoxLayout()
         toolbar.setContentsMargins(8, 8, 8, 8)
         lbl = QLabel(f"概念图谱{' — ' + book_id[:8] if book_id else ''}")
-        lbl.setStyleSheet("color: #cdd6f4; font-weight: bold;")
+        lbl.setObjectName("section_header")
         toolbar.addWidget(lbl)
         toolbar.addStretch()
 
