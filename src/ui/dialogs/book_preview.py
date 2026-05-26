@@ -167,9 +167,15 @@ class BookPreviewDialog(QDialog):
     def _disconnect(self) -> None:
         try:
             self._agent.response_chunk.disconnect(self._on_chunk)
+        except (RuntimeError, TypeError):
+            pass
+        try:
             self._agent.response_finished.disconnect(self._on_finished)
+        except (RuntimeError, TypeError):
+            pass
+        try:
             self._agent.error_occurred.disconnect(self._on_error)
-        except RuntimeError:
+        except (RuntimeError, TypeError):
             pass
 
     def _save_result(self) -> None:

@@ -28,6 +28,7 @@ class LibraryPanel(QWidget):
 
     book_selected = pyqtSignal(str)  # book_id
     book_preview_requested = pyqtSignal(str)  # book_id
+    book_preview_view_requested = pyqtSignal(str)  # book_id
 
     def __init__(self, library: Library, parent=None) -> None:
         super().__init__(parent)
@@ -355,6 +356,7 @@ class LibraryPanel(QWidget):
 
         menu.addSeparator()
         act_preview = menu.addAction("🤖 AI 全书预览总结")
+        act_view_preview = menu.addAction("📋 查看全书总结")
         menu.addSeparator()
         act_del = menu.addAction("🗑️ 移除")
 
@@ -367,6 +369,8 @@ class LibraryPanel(QWidget):
             self.refresh()
         elif action == act_preview:
             self.book_preview_requested.emit(book_id)
+        elif action == act_view_preview:
+            self.book_preview_view_requested.emit(book_id)
         elif action == act_del:
             from PyQt6.QtWidgets import QMessageBox
             r = QMessageBox.question(

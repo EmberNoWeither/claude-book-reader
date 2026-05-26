@@ -143,6 +143,10 @@ class MainWindow(QMainWindow):
         act_dashboard.setShortcut(QKeySequence("Ctrl+D"))
         act_dashboard.triggered.connect(self._on_show_dashboard)
         tools_menu.addAction(act_dashboard)
+        act_view_preview = QAction("查看全书总结", self)
+        act_view_preview.setShortcut(QKeySequence("Ctrl+Shift+P"))
+        act_view_preview.triggered.connect(self._on_view_current_book_preview)
+        tools_menu.addAction(act_view_preview)
         tools_menu.addSeparator()
         act_settings = QAction("设置...", self)
         act_settings.setShortcut(QKeySequence("Ctrl+,"))
@@ -220,6 +224,7 @@ class MainWindow(QMainWindow):
         self._library_panel = LibraryPanel(self._library)
         self._library_panel.book_selected.connect(self._on_book_selected)
         self._library_panel.book_preview_requested.connect(self._on_book_preview)
+        self._library_panel.book_preview_view_requested.connect(self._on_view_book_preview)
         self._splitter_main.addWidget(self._library_panel)
 
         # 中央 — 阅读区
@@ -639,6 +644,37 @@ class MainWindow(QMainWindow):
         from .dialogs.book_preview import BookPreviewDialog
         storage = self._storage or Storage(self._config.data_dir)
         dlg = BookPreviewDialog(book, storage, agent, self)
+        dlg.exec()
+
+    def _on_view_book_preview(self, book_id: str) -> None:
+        """从右键菜单查看已保存的全书总结"""
+        book = self._library.get_book(book_id)
+        if not book:
+            return
+        self._show_preview_viewer(book)
+
+    def _on_view_current_book_preview(self) -> None:
+        """从工具菜单查看当前书籍的全书总结"""
+        book_id = getattr(self._reading_view, "_book_id", "")
+        if not book_id:
+            QMessageBox.information(self, "提示", "请先打开一本书")
+            return
+        book = self._library.get_book(book_id)
+        if not book:
+            return
+        self._show_preview_viewer(book)
+
+    def _show_preview_viewer(self, book) -> None:
+        storage = self._storage or Storage(self._config.data_dir)
+        preview_data = storage.read_book_json(book.id, "book_preview.json")
+        if not preview_data or not preview_data.get("preview"):
+            QMessageBox.information(
+                self, "提示",
+                f"《{book.title}》还没有全书总结。\n请右键书籍选择「AI 全书预览总结」生成。",
+            )
+            return
+        from .dialogs.preview_viewer import PreviewViewerDialog
+        dlg = PreviewViewerDialog(book, preview_data["preview"], self)
         dlg.exec()
 
     def _on_save_claude_to_notes(self, text: str, page: int = -1, pdf_rects=None) -> None:
